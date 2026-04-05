@@ -10,6 +10,7 @@
 
 #include "shilin_n_monte_carlo_integration/common/include/common.hpp"
 #include "shilin_n_monte_carlo_integration/seq/include/ops_seq.hpp"
+#include "shilin_n_monte_carlo_integration/stl/include/ops_stl.hpp"
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
 
@@ -78,8 +79,10 @@ const std::array<TestType, 8> kTestParam = {{
                     "kProduct_3D"),
 }};
 
-const auto kTestTasksList = ppc::util::AddFuncTask<ShilinNMonteCarloIntegrationSEQ, InType>(
-    kTestParam, PPC_SETTINGS_shilin_n_monte_carlo_integration);
+const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<ShilinNMonteCarloIntegrationSEQ, InType>(
+                                               kTestParam, PPC_SETTINGS_shilin_n_monte_carlo_integration),
+                                           ppc::util::AddFuncTask<ShilinNMonteCarloIntegrationSTL, InType>(
+                                               kTestParam, PPC_SETTINGS_shilin_n_monte_carlo_integration));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
