@@ -70,14 +70,19 @@ bool ShilinNMonteCarloIntegrationSTL::RunImpl() {
 
   auto worker = [&](unsigned int tid) {
     std::vector<double> point(dimensions);
+    // Local accumulator avoids false sharing on partial_sums[tid] (adjacent doubles
+    // share a cache line, so per-iteration writes from different threads ping-pong
+    // the line between cores and make the parallel version slower than seq).
+    double local_sum = 0.0;
     for (int i = static_cast<int>(tid); i < num_points_; i += static_cast<int>(num_threads)) {
       for (int di = 0; di < dimensions; ++di) {
         double val = 0.5 + (static_cast<double>(i + 1) * alpha[di]);
         double current = val - std::floor(val);
         point[di] = lower_bounds_[di] + ((upper_bounds_[di] - lower_bounds_[di]) * current);
       }
-      partial_sums[tid] += IntegrandFunction::Evaluate(func_type_, point);
+      local_sum += IntegrandFunction::Evaluate(func_type_, point);
     }
+    partial_sums[tid] = local_sum;
   };
 
   for (unsigned int ti = 0; ti < num_threads; ++ti) {
